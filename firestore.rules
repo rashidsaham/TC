@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    match /diaryEntries/{entryId} {
+      function isValidEntry(data) {
+        return data.employeeId is string && 
+               data.type is string && 
+               data.status in ['pending', 'approved'];
+      }
+
+      allow read: if isSignedIn() && (isAdmin() || resource.data.employeeId == request.auth.uid);
+      
+      allow create: if isSignedIn() && (
+        isAdmin() || 
+        (request.resource.data.employeeId == request.auth.uid && request.resource.data.status == 'pending')
+      ) && isValidEntry(request.resource.data);
+
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        (resource.data.employeeId == request.auth.uid && resource.data.status == 'pending' && request.resource.data.status == 'pending')
+      ) && isValidEntry(request.resource.data) && 
+      request.resource.data.employeeId == resource.data.employeeId;
+
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isAdmin();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /messages/{messageId} {
+      function isParticipant(data) {
+        return data.senderId == request.auth.uid || data.receiverId == request.auth.uid;
+      }
+      allow read: if isSignedIn() && isParticipant(resource.data);
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.receiverId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && isParticipant(resource.data);
+    }
+
+    match /diaryTypes/{typeId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

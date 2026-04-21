@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account details and roles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "employee"] },
+        "position": { "type": "string" },
+        "jobId": { "type": "string" },
+        "civilId": { "type": "string" },
+        "phone": { "type": "string" },
+        "theme": { "type": "string", "enum": ["light", "dark"] },
+        "accentColor": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "DiaryEntry": {
+      "title": "Diary Entry",
+      "description": "Daily activity record for an employee",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "type": { "type": "string" },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved"] },
+        "approvedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["employeeId", "date", "type", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notifications for users",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "message", "read", "createdAt"]
+    },
+    "Message": {
+      "title": "Private Message",
+      "description": "Private communication between users",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "receiverName": { "type": "string" },
+        "content": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "receiverId", "content", "read", "createdAt"]
+    },
+    "DiaryType": {
+      "title": "Diary Type",
+      "description": "Available categories for diary entries",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "BroadcastMessage": {
+      "title": "Broadcast Message",
+      "description": "Admin broadcast messages",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "startDate", "endDate", "active"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user profiles"
+    },
+    "/diaryEntries/{entryId}": {
+      "schema": "DiaryEntry",
+      "description": "Diary records for all employees"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Private messages"
+    },
+    "/broadcastMessages/{id}": {
+      "schema": "BroadcastMessage",
+      "description": "System-wide broadcasts"
+    },
+    "/diaryTypes/{typeId}": {
+      "schema": "DiaryType",
+      "description": "List of allowed activity types"
+    }
+  }
+}
